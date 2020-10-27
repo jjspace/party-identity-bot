@@ -16,6 +16,7 @@ module.exports.noMentionOpts = {
  * @property {number} [max] - must have less than this number, non-inclusive
  * @property {number} [exact] - must have exactly this many, overrides min and max if set
  * @property {string | argErrorMessages} [errorMsg] - override default warning messages
+ * @property {RegExp[] | RegExp[][] | function(string[]):string|null} [structure] - possible argument structure patterns. Structure for each arg or Array of structures or a function that returns the message to send on a failure
  */
 
 /**

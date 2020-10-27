@@ -3,7 +3,7 @@ const { discordBotToken } = require('./config');
 const logger = require('./logger');
 const commands = require('./commands');
 const db = require('./db/db');
-const { getServer } = require('./db/dbClient');
+const { getServer, addServer } = require('./db/dbClient');
 const { validateArgs } = require('./utils');
 
 const client = new Discord.Client();
@@ -93,7 +93,7 @@ client.on('message', async (message) => {
   const serverDb = await getServer(guild.id);
   if (!serverDb) {
     logger.info(`serverDb not found for "${guild.name}:${guild.id}". Generating new default`);
-    dbClient.addServer(db.Guilds, guild.id, guild.name);
+    addServer(guild.id, guild.name);
     message.channel.send(
       'Current Guild settings not found, defaults were generated.\nIf you think this is wrong contact the bot developer'
     );
@@ -132,7 +132,7 @@ client.on('message', async (message) => {
       // - an object of the format: { reason: 'string', response: 'message to send back' }
       // if no message is provided, silently disallow
       if (command.inhibitors) {
-        for (inhibit of command.inhibitors) {
+        command.inhibitors.forEach((inhibit) => {
           const inhibition = inhibit(message);
           if (typeof inhibition === 'object' && inhibition.reason) {
             logger.info(`Command inhibited for reason: ${inhibition.reason}`);
@@ -143,9 +143,8 @@ client.on('message', async (message) => {
           }
           if (inhibition) {
             logger.info(`Command inhibited for reason: ${inhibition}`);
-            return;
           }
-        }
+        });
       }
 
       // validate arguments
@@ -160,11 +159,10 @@ client.on('message', async (message) => {
       if (command.execute.constructor.name === 'AsyncFunction') {
         logger.info(`Executing Async command: "${commandName}" with args: [ ${args.join(', ')} ]`);
         return command.execute(message, args).catch(logger.error);
-      } else {
-        logger.info(`Executing command: "${commandName}" with args: [ ${args.join(', ')} ]`);
-        command.execute(message, args);
-        return;
       }
+      logger.info(`Executing command: "${commandName}" with args: [ ${args.join(', ')} ]`);
+      command.execute(message, args);
+      return;
     } catch (error) {
       logger.error(error);
       message.reply('There was an error trying to execute that command!');

@@ -27,7 +27,7 @@ module.exports = {
       const { members } = group;
       if (members) {
         members.forEach((member) => {
-          outStr += `\n${member.userId}`;
+          outStr += `\n${message.guild.member(member.userId)}`;
         });
       }
       message.channel.send(outStr, noMentionOpts);

@@ -20,3 +20,6 @@ module.exports.EMBED_LIMITS = {
   FOOTER_TEXT: 2048,
   SUM_CHAR_IN_EMBED: 6000,
 };
+
+module.exports.SET_NAME_PATTERN = /^[\w-]+$/;
+module.exports.GROUP_NAME_PATTERN = /^[\w-]+$/;

@@ -3,7 +3,7 @@ const { Group, GroupMember, IdentitySet, Identity, Guilds } = require('./db');
 
 const defaultPrefix = '!';
 
-// =========================== Helpers ===========================
+// #region helpers ======================= Helpers =======================
 
 /**
  * @typedef NickMapping
@@ -16,17 +16,33 @@ const defaultPrefix = '!';
  * @param {Discord.Collection<string, Discord.User>} mentions Collection of user objects. Can get from `message.mentions.users`
  * @returns {NickMapping[]}
  */
-module.exports.nicksFromMentions = (guild, mentions) => {
-  return mentions.array().map((user) => {
+module.exports.nicksFromMentions = (guild, mentions) =>
+  mentions.array().map((user) => {
     const member = guild.member(user);
     return {
       id: user.id,
       nickname: member.nickname,
     };
   });
-};
 
-//#region guilds ======================= Guilds =======================
+/**
+ * Extract nicknames for a set of userIds
+ * @param {Discord.Guild} guild Discord Guild to pull the nickname from
+ * @param {Discord.UserResolvable} userIds List of Discord user ids
+ * @returns {NickMapping[]}
+ */
+module.exports.nicksFromIds = (guild, userIds) =>
+  userIds.map((id) => {
+    const member = guild.member(id);
+    return {
+      id,
+      nickname: member.nickname,
+    };
+  });
+
+// #endregion helpers
+
+// #region guilds ======================= Guilds =======================
 
 /**
  * Retrieve a guild from the db
@@ -56,9 +72,9 @@ module.exports.addServer = async (serverId, serverName) => {
   }
 };
 
-//#endregion guilds
+// #endregion guilds
 
-//#region groups ======================= Groups =======================
+// #region groups ======================= Groups =======================
 
 /**
  * Retrieve all groups for the current guild
@@ -116,7 +132,7 @@ module.exports.getGroup = async (guildId, groupName, includeMembers = false) => 
 module.exports.createGroup = async (guildId, groupName, members) => {
   try {
     const newGroup = await Group.create({
-      guildId: guildId,
+      guildId,
       name: groupName,
     });
 
@@ -151,9 +167,48 @@ module.exports.deleteGroup = async (guildId, groupName) => {
   }
 };
 
-//#endregion groups
+// #endregion groups
 
-//#region sets ======================= Sets =======================
+// #region group-member ======================= Group Memebers =======================
+
+/**
+ * Create an Group Member within a specified group
+ * @async
+ * @param {number} groupId Id of the group this belongs to
+ * @param {string} userId Discord user id
+ * @returns {Promise<import('./db').GroupMember>}
+ */
+module.exports.createGroupMember = async (groupId, userId) => {
+  try {
+    return await GroupMember.create({
+      groupId,
+      userId,
+    });
+  } catch (err) {
+    logger.warn(err);
+    throw err;
+  }
+};
+
+/**
+ * Remove a user's identity from a given group
+ * @async
+ * @param {number} groupId group id
+ * @param {string} userId Discord User Id
+ * @returns {Promise<number>} Number of rows deleted
+ */
+module.exports.deleteGroupMember = async (groupId, userId) => {
+  try {
+    return await GroupMember.destroy({ where: { groupId, userId } });
+  } catch (err) {
+    logger.warn(err);
+    throw err;
+  }
+};
+
+// #endregion group-member
+
+// #region sets ======================= Sets =======================
 
 /**
  * Retrieve all sets for the current guild
@@ -201,7 +256,8 @@ module.exports.getSet = async (guildId, setName, includeMembers = false) => {
 };
 
 /**
- * Create a new set in the current guild with the specified name and add member identities to it if provided
+ * Create a new set in the current guild with the specified name
+ * and add member identities to it if provided
  * @async
  * @param {string} guildId Guild id
  * @param {string} setName name of group to create
@@ -211,7 +267,7 @@ module.exports.getSet = async (guildId, setName, includeMembers = false) => {
 module.exports.createSet = async (guildId, setName, nicknames) => {
   try {
     const newSet = await IdentitySet.create({
-      guildId: guildId,
+      guildId,
       name: setName,
     });
 
@@ -247,4 +303,61 @@ module.exports.deleteSet = async (guildId, setName) => {
   }
 };
 
-//#endregion sets
+// #endregion sets
+
+// #region ids ======================= Identities =======================
+
+/**
+ * Create an Identity within a specified set
+ * @async
+ * @param {number} identitySetId Id of set this belongs to
+ * @param {string} userId Discord user id
+ * @param {string} nickname nickname used for this set
+ * @returns {Promise<import('./db').Identity>}
+ */
+module.exports.createIdentity = async (identitySetId, userId, nickname) => {
+  try {
+    return await Identity.create({
+      identitySetId,
+      userId,
+      nickname,
+    });
+  } catch (err) {
+    logger.warn(err);
+    throw err;
+  }
+};
+
+/**
+ * Update a user's identity for a given set
+ * @param {number} identitySetId Set id
+ * @param {string} userId Discord User Id
+ * @param {string} newNickname new nickname for identity
+ * @returns {Promise<Identity>}
+ */
+module.exports.updateIdentity = async (identitySetId, userId, newNickname) => {
+  try {
+    return await Identity.update({ nickname: newNickname }, { where: { identitySetId, userId } });
+  } catch (err) {
+    logger.warn(err);
+    throw err;
+  }
+};
+
+/**
+ * Remove a user's identity from a given set
+ * @async
+ * @param {number} identitySetId set id
+ * @param {string} userId Discord User Id
+ * @returns {Promise<number>} Number of rows deleted
+ */
+module.exports.deleteIdentity = async (identitySetId, userId) => {
+  try {
+    return await Identity.destroy({ where: { identitySetId, userId } });
+  } catch (err) {
+    logger.warn(err);
+    throw err;
+  }
+};
+
+// #endregion
