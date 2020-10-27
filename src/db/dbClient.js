@@ -169,7 +169,7 @@ module.exports.deleteGroup = async (guildId, groupName) => {
 
 // #endregion groups
 
-// #region group-member ======================= Group Memebers =======================
+// #region group-member ======================= Group Members =======================
 
 /**
  * Create an Group Member within a specified group

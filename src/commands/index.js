@@ -1,6 +1,7 @@
 const Discord = require('discord.js');
 const ping = require('./ping');
 const helpGen = require('./help');
+const version = require('./version');
 const groups = require('./groups/groups');
 const createGroup = require('./groups/creategroup');
 const delGroup = require('./groups/delgroup');
@@ -56,6 +57,7 @@ const registerCommand = (command) => {
 // });
 
 registerCommand(ping);
+registerCommand(version);
 registerCommand(groups);
 registerCommand(createGroup);
 registerCommand(delGroup);

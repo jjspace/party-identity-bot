@@ -69,10 +69,10 @@ const Identity = sequelize.define('identity', {
   identitySetId: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: 'noDupeIdentitesInSet',
+    unique: 'noDupeIdentitiesInSet',
     references: { model: IdentitySet, key: 'id' },
   },
-  userId: { type: DataTypes.STRING, allowNull: false, unique: 'noDupeIdentitesInSet' },
+  userId: { type: DataTypes.STRING, allowNull: false, unique: 'noDupeIdentitiesInSet' },
   nickname: { type: DataTypes.TEXT },
 });
 IdentitySet.hasMany(Identity, { as: 'identities', onDelete: 'cascade' });

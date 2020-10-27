@@ -131,8 +131,9 @@ client.on('message', async (message) => {
       // - a simple string reason why it was blocked
       // - an object of the format: { reason: 'string', response: 'message to send back' }
       // if no message is provided, silently disallow
+      // TODO: restructure inhibitor logic to throw errors to allow for better handling
       if (command.inhibitors) {
-        command.inhibitors.forEach((inhibit) => {
+        for (inhibit of command.inhibitors) {
           const inhibition = inhibit(message);
           if (typeof inhibition === 'object' && inhibition.reason) {
             logger.info(`Command inhibited for reason: ${inhibition.reason}`);
@@ -143,8 +144,14 @@ client.on('message', async (message) => {
           }
           if (inhibition) {
             logger.info(`Command inhibited for reason: ${inhibition}`);
+            if (command.hidden) {
+              message.channel.send(
+                `Unrecognized command. Use \`${commandPrefix}help\` to see available commands`
+              );
+            }
+            return;
           }
-        });
+        }
       }
 
       // validate arguments
